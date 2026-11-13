@@ -1,0 +1,38 @@
+plugins {
+  id 'java-library'
+}
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(21)
+  }
+}
+
+// The runtime environment this JAR will be deployed to doesn't know what this model depends on.
+// So the generated JAR must include its dependencies. (Except `merlin-sdk`, which is marked `compileTimeApi` by
+// `merlin-framework`, so that the runtime system and model JAR can agree on the same interfaces.)
+jar {
+  from {
+    configurations.runtimeClasspath.filter{ it.exists() }.collect{ it.isDirectory() ? it : zipTree(it) }
+  }
+  duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+}
+
+tasks.named('test') {
+  useJUnitPlatform()
+}
+
+dependencies {
+  annotationProcessor 'gov.nasa.ammos.plandev:merlin-framework-processor:' + project.plandevVersion
+  implementation 'gov.nasa.ammos.plandev:contrib:' + project.plandevVersion
+  implementation 'gov.nasa.ammos.plandev:merlin-framework:' + project.plandevVersion
+  implementation 'gov.nasa.ammos.plandev:merlin-sdk:' + project.plandevVersion
+  implementation 'gov.nasa.ammos.plandev:merlin-driver:' + project.plandevVersion
+  implementation 'gov.nasa.ammos.plandev:parsing-utilities:' + project.plandevVersion
+  implementation 'gov.nasa.ammos.plandev:type-utils:' + project.plandevVersion
+
+  testImplementation 'gov.nasa.ammos.plandev:merlin-framework-junit:' + project.plandevVersion
+  testImplementation 'org.junit.jupiter:junit-jupiter:+'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
